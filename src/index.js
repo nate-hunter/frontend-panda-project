@@ -19,7 +19,7 @@ function displayDancingPanda(gifObj) {
   return `
   <h1 data-id="${gifObj.data.id}">${gifObj.data.name}</h1>
   <img src="${gifObj.data.img_url}">
-  <audio id="song" src="sounds/${gifObj.data.music}"></audio>
+  <audio loop id="song" src="sounds/${gifObj.data.music}"></audio>
   `
 };
 
