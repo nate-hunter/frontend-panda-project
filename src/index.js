@@ -2,7 +2,7 @@
 const gifsUrl = "http://localhost:3000/api/v1/gifs"
 const ulTag = document.querySelector('#pandas')
 const pandaDiv = document.querySelector('#gif-detail')
-
+const likeComment = document.querySelector('#like-comment')
 //-----
 
 // FUNCTIONS:
@@ -10,7 +10,7 @@ function gifsList(gif) {
   return `
     <li id="gif" data-id=${gif.id}>
       <br>
-      <img src="${gif.img_url}" width="75" height="75">
+      <img src="${gif.img_url}" width="50" height="50">
     </li>
   `
 };
@@ -25,9 +25,31 @@ function displayDancingPanda(gifObj) {
   `
 };
 
+function displayLikesAndComments(gifObj) {
+  return `
+    <button class='btn-like' data-id=${gifObj.data.id}><3 Likes: <span>${gifObj.data.likes}</span></button>
+    <button class='btn-comment'>Add Comment</button>
+  `
+};
+
 function getPanda(id) {
   return fetch(gifsUrl + '/' + id)
   .then(resp => resp.json())
+};
+
+function updateLikes(id, currentLikes) {
+  // debugger
+  const fetchObj = {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      likes: currentLikes
+    })
+  };
+  return fetch(gifsUrl + '/' + id, fetchObj)
 };
 
 function playSound(e) {
@@ -43,6 +65,7 @@ function playSound(e) {
 ulTag.addEventListener('click', e => {
   const pandaGIF = e.target
   const liTag = pandaGIF.parentElement
+  const likeComment = pandaDiv.parentElement.parentElement.querySelector('#like-comment')
   if (pandaGIF.parentElement.id === "gif") {
     getPanda(liTag.dataset.id)
     .then(gifObj => {
@@ -50,14 +73,28 @@ ulTag.addEventListener('click', e => {
         pandaDiv.dataset.id = liTag.dataset.id
         pandaDiv.innerHTML = displayDancingPanda(gifObj)
         playSound()
+        likeComment.innerHTML = displayLikesAndComments(gifObj)
       }
     })
   }
 });
 
-pandaDiv.addEventListener('click', event => {
-  // debugger
-  if(event.target.tagName === 'BUTTON') {
+likeComment.addEventListener('click', e => {
+  if (e.target.className === 'btn-like') {
+    let button = e.target
+    let likesOnTheDom = e.target.querySelector('span');
+    let currentLikes = parseInt(e.target.querySelector('span').innerText) + 1
+    updateLikes(button.dataset.id, currentLikes)
+    .then(resp => {
+      // debugger
+      if (resp.ok) {
+        likesOnTheDom.innerText = currentLikes
+      }
+    })
+    // debugger
+
+
+  } else if(event.target.tagName === 'BUTTON') {
     let gif_id = pandaDiv.dataset.id
     pandaDiv.innerHTML += creatingGifCommentHTML(gif_id)
     // stops playing sound so added this in the bottom need to fix
@@ -77,6 +114,28 @@ pandaDiv.addEventListener('click', event => {
   }
 })
 
+// pandaDiv.addEventListener('click', event => {
+//   // debugger
+//   if(event.target.tagName === 'BUTTON') {
+//     let gif_id = pandaDiv.dataset.id
+//     pandaDiv.innerHTML += creatingGifCommentHTML(gif_id)
+//     // stops playing sound so added this in the bottom need to fix
+//     // also makes multiple forms
+//     const gifCommentFormTag = document.querySelector('form')
+//     gifCommentFormTag.addEventListener('submit', event => {
+//       event.preventDefault()
+//       let name = event.target.firstname.value
+//       let comment = event.target.comment.value
+//       addingCommentsToBackEnd(name, comment, gif_id).then(console.log)
+//        pandaDiv.innerHTML += `<h3>${comment} said ${name}</h3>`
+//        // Creatig an object with a null ID and and null gif_ID need to fix.
+//        // also when adding another comment the submit button refreshed the page.
+//        playSound()
+//     })
+//     playSound()
+//   }
+// })
+
 //-----
 
 // GETs gifs:
@@ -92,13 +151,13 @@ fetch(gifsUrl)
 
 // adding comment form to button and fetching from comments
 const creatingGifCommentHTML = (gif_id) => {
-    return `<form data-id='${gif_id}'>
-                First Name:<br>
-                <input type="text" name="firstname" value=""><br>
-                Comment:<br>
-                <input type="text" name="comment" value=""><br><br>
-                <input type="submit" value="Submit">
-              </form>`
+    return `
+    <form data-id='${gif_id}'>First Name:<br>
+      <input type="text" name="firstname" value=""><br>
+      Comment:<br>
+      <input type="text" name="comment" value=""><br><br>
+      <input type="submit" value="Submit">
+    </form>`
 }
 
 const addingCommentsToBackEnd = (name, comment, gif_id) => {
