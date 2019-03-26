@@ -8,9 +8,9 @@ const pandaDiv = document.querySelector('#gif-detail')
 // FUNCTIONS:
 function gifsList(gif) {
   return `
-  <li id="gif" data-id=${gif.id}>
-    <br>
-    <img src="${gif.img_url}" width="75" height="75">
+    <li id="gif" data-id=${gif.id}>
+      <br>
+      <img src="${gif.img_url}" width="75" height="75">
     </li>
   `
 };
@@ -54,28 +54,6 @@ ulTag.addEventListener('click', e => {
     })
   }
 });
-//-----
-
-// GETs gifs:
-fetch(gifsUrl)
-.then(resp => resp.json())
-.then(gifs => {
-  // console.log(gifs)
-  gifs.data.forEach(gif => {
-    ulTag.innerHTML += gifsList(gif)
-  })
-})
-//-----
-// adding comment form to button and fetching from comments
-const creatingGifCommentHTML = (gif_id) => {
-    return `<form data-id='${gif_id}'>
-                First Name:<br>
-                <input type="text" name="firstname" value=""><br>
-                Comment:<br>
-                <input type="text" name="comment" value=""><br><br>
-                <input type="submit" value="Submit">
-              </form>`
-}
 
 pandaDiv.addEventListener('click', event => {
   // debugger
@@ -96,9 +74,32 @@ pandaDiv.addEventListener('click', event => {
        playSound()
     })
     playSound()
-
   }
 })
+
+//-----
+
+// GETs gifs:
+fetch(gifsUrl)
+.then(resp => resp.json())
+.then(gifs => {
+  // console.log(gifs)
+  gifs.data.forEach(gif => {
+    ulTag.innerHTML += gifsList(gif)
+  })
+})
+//-----
+
+// adding comment form to button and fetching from comments
+const creatingGifCommentHTML = (gif_id) => {
+    return `<form data-id='${gif_id}'>
+                First Name:<br>
+                <input type="text" name="firstname" value=""><br>
+                Comment:<br>
+                <input type="text" name="comment" value=""><br><br>
+                <input type="submit" value="Submit">
+              </form>`
+}
 
 const addingCommentsToBackEnd = (name, comment, gif_id) => {
   return fetch(`http://localhost:3000/api/v1/comments`, {
