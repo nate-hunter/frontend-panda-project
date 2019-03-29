@@ -1,65 +1,82 @@
 // VARIABLES:
-const gifsUrl = "http://localhost:3000/api/v1/gifs"
-const ulTag = document.querySelector('#pandas')
-const pandaDiv = document.querySelector('#gif-detail')
-const likeComment = document.querySelector('#like-comment')
-const commentList = document.querySelector('#comments-list')
-//-----
+const gifsUrl = "http://localhost:3000/api/v1/gifs";
+const commentsUrl = "http://localhost:3000/api/v1/comments";
+const ulIcons = document.querySelector('.list-gifs');
+const dancingDiv = document.querySelector('.gif-dancing-panda');
+const likesCommentsDiv = document.querySelector('.btns-like-comment');
+const commentsDiv = document.querySelector('.comments');
+const commentForm = document.querySelector('.comment-form')
+const commentList = document.querySelector('.comments-list')
+//---
 
 // FUNCTIONS:
-function gifsList(gif) {
+function gifsList (gif) {
   return `
-    <li id="gif" data-id=${gif.id}>
-      <br>
-      <img src="${gif.img_url}" width="30" height="30">
+  <li id="gif" data-id=${gif.id}>
+    <br>
+    <img src="${gif.img_url}" width="20" height="20">
+  </li>
+  `
+};
+
+function displayDancingPanda(panda) {
+  return `
+    <img src="${panda.img_url}" data-id="${panda.id}" class="dancing-panda">
+    <audio loop id="song" src="sounds/${panda.music}"></audio>
+  `
+};
+
+function displayLikesAndAddComments(panda) {
+  return `
+    <button class='btn-like' data-gif-id=${panda.id}>${panda.likes} Likes</button>
+    <button class='btn-comment' data-gif-id=${panda.id}>Add Comment</button>
+  `
+};
+
+function displayCommentForm(id) {
+  return `
+    <hr>
+    <form class="comment-form" data-gif-id="${id}">
+      <input type="text" name="name" placeholder="name">
+      <textarea type="text" name="comment" placeholder="comment"></textarea>
+      <input type="submit" value="SUBMIT">
+    </form>
+    <hr>
+  `
+};
+
+function displayPandaComments(panda){
+  const commentsArr = panda.comments.map(comment => {
+    return commentCard(comment)
+  })
+  return commentsArr.join(" ")
+};
+
+function commentCard(comment){
+  return `
+    <li class='comment-card' data-comment-id=${comment.id}>
+      <p class="comment">${comment.comment}</p>
+      <footer class="comment-footer">– ${comment.name}</footer><br>
+      <button class='btn-delete-comment' data-comment-id=${comment.id}>Delete Comment</button>
+      <hr>
     </li>
   `
-};
+}
 
-function displayDancingPanda(gifObj) {
-  pandaDiv.dataset.id = gifObj.data.id
-  return `
-  <h2 data-id="${gifObj.data.id}">${gifObj.data.name}</h2>
-  <img class="featured-gif" src="${gifObj.data.img_url}">
-  <audio controls loop id="song" src="sounds/${gifObj.data.music}"></audio>
-  <button type="button">Rate my moves!</button>
-  `
-};
-
-function displayLikesAndComments(gifObj) {
-  return `
-    <button class='btn-like' data-id=${gifObj.data.id}><3 Likes: <span>${gifObj.data.likes}</span></button>
-    <button class='btn-comment' data-id=${gifObj.data.id}>Add Comment</button>
-  `
-};
-
-const creatingGifCommentHTML = (gif_id) => {
-    return `
-    <form data-id='${gif_id}'>First Name:<br>
-      <input type="text" name="firstname" placeholder="name"><br>
-      Comment:<br>
-      <input type="text" name="comment" placeholder="comment"><br><br>
-      <input type="submit" value="Submit">
-    </form>`
-} // Do you mind if we change from First name to Name so the user can put in any name?
-
-function createCommentListItem(comment) {
-  // return `<li ${comment.id}>`
-  return `
-    <li class='comment-list-item' data-id=${comment.id}>
-      <p class="mb-0">${comment.comment}</p>
-      <footer class="blockquote-footer">${comment.name}</footer>
-    </li>
-  `
+function playSound() {
+  const audio = document.querySelector('#song')
+  if(!audio) return;
+  // audio.currentTime = 30
+  audio.play();
 };
 
 function getPanda(id) {
+  // debugger
   return fetch(gifsUrl + '/' + id)
   .then(resp => resp.json())
 };
 
 function updateLikes(id, currentLikes) {
-  // debugger
   const fetchObj = {
     method: "PATCH",
     headers: {
@@ -71,131 +88,127 @@ function updateLikes(id, currentLikes) {
     })
   };
   return fetch(gifsUrl + '/' + id, fetchObj)
+  .then(resp => resp.json())
 };
 
-function playSound(e) {
-  const audio = document.querySelector('#song')
-  if(!audio) return;
-  audio.currentTime = 0
-  audio.play();
-  // key.classList.add('playing');
+function createComment(gif_id, name, comment) {
+  const fetchObj = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify({
+      gif_id: gif_id,
+      name: name,
+      comment: comment
+    })
+  };
+  return fetch(commentsUrl, fetchObj)
+  .then(resp => resp.json())
+};
+
+function deleteComment(id) {
+  return fetch(commentsUrl + '/' + id, {method: "DELETE"})
 };
 //-----
 
 // EVENT LISTENERS:
-ulTag.addEventListener('click', e => {
-  const pandaGIF = e.target
-  const liTag = pandaGIF.parentElement
-  const likeComment = pandaDiv.parentElement.parentElement.querySelector('#like-comment')
-  if (pandaGIF.parentElement.id === "gif") {
-    getPanda(liTag.dataset.id)
-    .then(gifObj => {
-      if (!!gifObj) {
-        pandaDiv.dataset.id = liTag.dataset.id
-        pandaDiv.innerHTML = displayDancingPanda(gifObj)
-        playSound()
-        likeComment.innerHTML = displayLikesAndComments(gifObj)
-      }
-    })
-  }
-});
+ulIcons.addEventListener('click', e => {
+  let image = e.target
+  let pandaLi = e.target.parentElement
+  if (pandaLi.id === "gif") {
+    getPanda(pandaLi.dataset.id)
+    .then(panda => {
+      if (!!panda) {
+        if (panda.name === "Random"){
+          console.log(panda.name)
+          randomGif()
+          .then(gif => {
+            panda.img_url = gif.data.image_url
+            // debugger
+            dancingDiv.innerHTML = displayDancingPanda(panda)
+            likesCommentsDiv.innerHTML = displayLikesAndAddComments(panda)
+            const ulPanda = commentList.querySelector('ul')
+            ulPanda.innerHTML = displayPandaComments(panda)
+            playSound()
 
-likeComment.addEventListener('click', e => {
-  if (e.target.className === 'btn-like') {
-    let likeButton = e.target
-    let likesOnTheDom = e.target.querySelector('span');
-    let currentLikes = parseInt(e.target.querySelector('span').innerText) + 1
-    updateLikes(likeButton.dataset.id, currentLikes)
-    .then(resp => {
-      if (resp.ok) {
-        likesOnTheDom.innerText = currentLikes
-      }
-    })
-
-  } else if(e.target.className === 'btn-comment') {
-    let commentButton = e.target
-    let likeCommentDiv = e.target.parentElement
-    // let gif_id = pandaDiv.dataset.id
-    likeCommentDiv.innerHTML += creatingGifCommentHTML(commentButton.dataset.id)
-    // stops playing sound so added this in the bottom need to fix
-    // also makes multiple forms
-    const gifCommentFormTag = document.querySelector('form')
-    gifCommentFormTag.addEventListener('submit', event => {
-      event.preventDefault()
-      let form = event.target
-      let name = event.target.firstname.value
-      let comment = event.target.comment.value
-      addingCommentsToBackEnd(name, comment, form.dataset.id)
-      .then(commentObj => {
-        if (!!commentObj) {
-          if (commentObj.gif_id) {
-            debugger
-            commentList.innerHTML += createCommentListItem(commentObj)
-
-          }
+          })
+        } else {
+          console.log(panda.name)
+          dancingDiv.innerHTML = displayDancingPanda(panda)
+          likesCommentsDiv.innerHTML = displayLikesAndAddComments(panda)
+          const ulPanda = commentList.querySelector('ul')
+          ulPanda.innerHTML = displayPandaComments(panda)
+          playSound()
         }
-      })
-      // debugger
-
-       // pandaDiv.innerHTML += `<h3>${comment} said ${name}</h3>`
-       // Creatig an object with a null ID and and null gif_ID need to fix.
-       // also when adding another comment the submit button refreshed the page.
-       // playSound()
+      }
     })
-    // playSound()
   }
-})
+}); // Displays dancing panda-gif with its likes and comments after clicking on its small icon
 
-// pandaDiv.addEventListener('click', event => {
-//   // debugger
-//   if(event.target.tagName === 'BUTTON') {
-//     let gif_id = pandaDiv.dataset.id
-//     pandaDiv.innerHTML += creatingGifCommentHTML(gif_id)
-//     // stops playing sound so added this in the bottom need to fix
-//     // also makes multiple forms
-//     const gifCommentFormTag = document.querySelector('form')
-//     gifCommentFormTag.addEventListener('submit', event => {
-//       event.preventDefault()
-//       let name = event.target.firstname.value
-//       let comment = event.target.comment.value
-//       addingCommentsToBackEnd(name, comment, gif_id).then(console.log)
-//        pandaDiv.innerHTML += `<h3>${comment} said ${name}</h3>`
-//        // Creatig an object with a null ID and and null gif_ID need to fix.
-//        // also when adding another comment the submit button refreshed the page.
-//        playSound()
-//     })
-//     playSound()
-//   }
-// })
-
-//-----
-
-
-// adding comment form to button and fetching from comments
-const addingCommentsToBackEnd = (name, comment, gif_id) => {
-  return fetch(`http://localhost:3000/api/v1/comments`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-      name: name,
-      comment: comment,
-      gif_id: gif_id
+likesCommentsDiv.addEventListener('click', e => {
+  const button = e.target
+  if (button.className === "btn-like") {
+    let likesOnTheDom = button
+    let currentLikes = parseInt(likesOnTheDom.innerText) + 1
+    updateLikes(button.dataset.gifId, currentLikes)
+    .then(updatedLikes => {
+      if (!!updateLikes) {
+        likesOnTheDom.innerHTML = `${currentLikes} Likes`
+      }
     })
+  } else if (button.className === "btn-comment") {
+    commentsDiv.innerHTML += displayCommentForm(button.dataset.gifId)
+  }
+}); // Updates a panda-gif's likes or brings up form to input comments
+
+commentsDiv.addEventListener('submit', e => {
+  e.preventDefault()
+  let form = e.target
+  let name = form.name.value
+  let comment = form.querySelector('textarea').value
+  let ulCommentTag = commentList.firstElementChild
+  let gif_id = form.dataset.gifId
+  createComment(gif_id, name, comment)
+  .then(newComment => {
+    ulCommentTag.innerHTML += commentCard(newComment)
+    let pandaId = commentsDiv.querySelector('form').dataset.gifId
+    commentsDiv.innerHTML = displayCommentForm(pandaId)
   })
-  .then(res => res.json())
-};
+}); // Creates comments and adds to comment divs
+
+commentList.addEventListener('click', e => {
+  const deleteButton = e.target
+  deleteButton.parentElement.remove()
+  if (deleteButton.className === "btn-delete-comment") {
+    deleteComment(deleteButton.dataset.commentId)
+    // .then(resp => {
+    //   if (resp.ok) {
+    //     debugger
+    //   }
+    // })
+  }
+}); // Deletes a comment
 //-----
 
-// GETs gifs:
+// GETs panda gifs
 fetch(gifsUrl)
 .then(resp => resp.json())
 .then(gifs => {
-  // console.log(gifs)
-  gifs.data.forEach(gif => {
-    ulTag.innerHTML += gifsList(gif)
-  })
-})
+  gifs.forEach(gif => {
+    ulIcons.innerHTML += gifsList(gif)
+  });
+});
+//-----
+
+
+// GETs random panda gifs
+const randomPandaGif = "http://api.giphy.com/v1/gifs/random?&api_key=ALxfIZtyKtnS3FYBjJQZ7swvsLGDq6Di&tag=panda"
+const pandaSearch = "http://api.giphy.com/v1/gifs/search?&api_key=ALxfIZtyKtnS3FYBjJQZ7swvsLGDq6Di&q=panda&limit=3"
+
+function randomGif() {
+  return fetch(randomPandaGif)
+  .then(resp => resp.json())
+}
 //-----
