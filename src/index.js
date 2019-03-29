@@ -126,7 +126,6 @@ ulIcons.addEventListener('click', e => {
           randomGif()
           .then(gif => {
             panda.img_url = gif.data.image_url
-            // debugger
             dancingDiv.innerHTML = displayDancingPanda(panda)
             likesCommentsDiv.innerHTML = displayLikesAndAddComments(panda)
             const ulPanda = commentList.querySelector('ul')
