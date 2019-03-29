@@ -1,0 +1,39 @@
+h1 {
+  color:pink;
+}
+
+.list-icons {
+  width: 15%;
+  float: left;
+  padding-right: 30px;
+  position: relative;
+}
+
+.list-gifs {
+  list-style: none;
+}
+
+.comments-list-items {
+  list-style: none;
+}
+
+.main {
+  padding-left: 25%;
+  /* width: 75%; */
+}
+
+.gif-dancing-panda {
+  /* padding-left: 15%; */
+  /* padding: inherit; */
+  /* max-height: 100px; */
+  /* width: 100px; */
+  /* float: right; */
+  /* border-radius: 50%; */
+  /* float: left; */
+}
+
+.dancing-panda {
+  max-height: 300px;
+  border-style: solid;
+  border-width: 150px;
+}
